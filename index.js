@@ -1,12 +1,22 @@
 const express = require("express");
+const pool = require("./src/models/db");
 
 const app = express();
-const PORT = 3000;
+app.use(express.json());
+const authRoutes = require("./src/routes/auth.routes");
 
+app.use("/api/auth", authRoutes);
+
+// TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server running");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// TEST DB CONNECTION
+pool.connect()
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch(err => console.error("DB connection error", err));
+
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
 });
