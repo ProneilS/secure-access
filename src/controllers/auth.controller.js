@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../models/db");
+const http = require("http");
 
 // ================= REGISTER =================
 const registerUser = async (req, res) => {
@@ -117,7 +118,56 @@ const loginUser = async (req, res) => {
         req.headers["user-agent"] || "unknown"
       ]
     );
+// Send login event to anomaly service
+const loginEventData = JSON.stringify({
+  user_id: user.id,
+  ip_address: req.ip,
+  user_agent: req.headers["user-agent"] || "unknown",
+  hour_of_day: new Date().getHours()
+});
 
+const options = {
+  hostname: "localhost",
+  port: 5000,
+  path: "/analyse",
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(loginEventData)
+  }
+};
+
+const anomalyReq = http.request(options, (anomalyRes) => {
+  let responseData = "";
+  anomalyRes.on("data", (chunk) => { responseData += chunk; });
+  anomalyRes.on("end", async () => {
+    try {
+      const result = JSON.parse(responseData);
+      if (result.flagged) {
+        await pool.query(
+  `UPDATE login_events SET flagged = true 
+   WHERE id = (
+     SELECT id FROM login_events 
+     WHERE user_id = $1 
+     ORDER BY timestamp DESC 
+     LIMIT 1
+   )`,
+  [user.id]
+);
+        console.log(`ANOMALY DETECTED for user ${user.email} — risk score: ${result.risk_score}`);
+      }
+    } catch (e) {
+      console.error("Anomaly parse error:", e.message);
+    }
+  });
+});
+
+anomalyReq.on("error", (e) => {
+  console.error("Anomaly service unreachable:", e.message);
+});
+
+anomalyReq.write(loginEventData);
+anomalyReq.end();    
     // 7. Store session
     await pool.query(
       `INSERT INTO sessions (user_id, refresh_token, ip_address, user_agent, expires_at)

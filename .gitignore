@@ -1,2 +1,7 @@
 node_modules/
 .env
+anomaly-service/venv/
+anomaly-service/__pycache__/
+anomaly-service/*.pyc
+*.pyc
+__pycache__/
