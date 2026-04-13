@@ -5,3 +5,5 @@ anomaly-service/__pycache__/
 anomaly-service/*.pyc
 *.pyc
 __pycache__/
+dashboard/node_modules/
+dashboard/build/
