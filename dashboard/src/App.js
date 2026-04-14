@@ -4,6 +4,7 @@ import Login from "./components/Login";
 import StatsCards from "./components/StatsCards";
 import LoginEvents from "./components/LoginEvents";
 import Sessions from "./components/Sessions";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 function App() {
   const [token, setToken] = useState(null);
@@ -17,9 +18,9 @@ function App() {
     const activeToken = t || token;
     if (!activeToken) return;
 
-    const api = axios.create({
-      baseURL: "http://localhost:3000/api/admin",
-      headers: { Authorization: `Bearer ${activeToken}` }
+  const api = axios.create({
+   baseURL: `${API_URL}/api/admin`,
+    headers: { Authorization: `Bearer ${activeToken}` }
     });
 
     try {

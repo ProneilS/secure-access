@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ function Login({ onLogin }) {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", {
+      const res = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password
       });
