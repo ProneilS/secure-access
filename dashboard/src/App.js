@@ -61,7 +61,7 @@ function App() {
     if (!token) return;
     const interval = setInterval(() => fetchAll(token), 10000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token,fetchAll]);
 
   if (!token) return <Login onLogin={handleLogin} />;
   if (loading) return <div style={styles.center}>Loading dashboard...</div>;
