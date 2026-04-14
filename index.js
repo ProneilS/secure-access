@@ -4,12 +4,14 @@ const pool = require("./src/models/db");
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:3001" }));
+app.use(cors());
+
 const authRoutes = require("./src/routes/auth.routes");
+const adminRoutes = require("./src/routes/admin.routes");
 
 app.use("/api/auth", authRoutes);
-const adminRoutes = require("./src/routes/admin.routes");
 app.use("/api/admin", adminRoutes);
+
 // TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server running");
@@ -20,6 +22,9 @@ pool.connect()
   .then(() => console.log("Connected to PostgreSQL"))
   .catch(err => console.error("DB connection error", err));
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+// ✅ FIXED PORT
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
