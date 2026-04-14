@@ -61,7 +61,9 @@ function App() {
     if (!token) return;
     const interval = setInterval(() => fetchAll(token), 10000);
     return () => clearInterval(interval);
-  }, [token,fetchAll]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]); 
 
   if (!token) return <Login onLogin={handleLogin} />;
   if (loading) return <div style={styles.center}>Loading dashboard...</div>;
