@@ -1,11 +1,13 @@
-🔐 SecureAccess
-Intelligent Authentication System with AI-Based Anomaly Detection
+# 🔐 SecureAccess
 
-🚀 Live Demo: https://secure-access-ashy.vercel.app
+### Intelligent Authentication System with AI-Based Anomaly Detection
 
-⚙️ Backend API: https://secure-access-v2ta.onrender.com
+🚀 **Live Demo:** [secure-access-ashy.vercel.app](https://secure-access-ashy.vercel.app)  
+⚙️ **Backend API:** [secure-access-v2ta.onrender.com](https://secure-access-v2ta.onrender.com)
 
-🧠 Overview
+---
+
+## 🧠 Overview
 
 SecureAccess is a production-deployed, full-stack authentication system designed to simulate modern identity and access management (IAM) architectures.
 
@@ -13,147 +15,202 @@ It goes beyond traditional login systems by integrating a machine learning micro
 
 Built to explore how real-world authentication systems handle security, scalability, and anomaly detection.
 
-⚡ Key Features
-🔐 JWT Authentication (Access + Refresh Tokens)
-🛡️ Role-Based Access Control (RBAC)
-📊 Login Event Tracking & Session Management
-🧠 AI-Based Anomaly Detection (Isolation Forest)
-🔄 Non-blocking backend → ML service communication
-📈 Admin Dashboard with real-time monitoring
-☁️ Fully deployed multi-service architecture
-🏗️ System Architecture
+---
+
+## ⚡ Key Features
+
+- 🔐 JWT Authentication (Access + Refresh Tokens)
+- 🛡️ Role-Based Access Control (RBAC)
+- 📊 Login Event Tracking & Session Management
+- 🧠 AI-Based Anomaly Detection (Isolation Forest)
+- 🔄 Non-blocking backend → ML service communication
+- 📈 Admin Dashboard with real-time monitoring
+- ☁️ Fully deployed multi-service architecture
+
+---
+
+## 🏗️ System Architecture
+
+```
           ┌──────────────┐
-          │   Frontend   │ (React - Vercel)
+          │   Frontend   │  (React - Vercel)
           └──────┬───────┘
                  │
                  ▼
         ┌──────────────────┐
-        │  Node.js Backend │ (Render)
-        │ Auth + Sessions  │
+        │  Node.js Backend │  (Render)
+        │  Auth + Sessions │
         └──────┬───────────┘
                │
        ┌───────▼────────┐
-       │ PostgreSQL DB  │ (Render)
-       │ Users / Events │
+       │  PostgreSQL DB  │  (Render)
+       │ Users / Events  │
        └───────┬────────┘
                │
                ▼
       ┌───────────────────┐
-      │ Python ML Service │ (Flask - Render)
-      │ Isolation Forest  │
+      │ Python ML Service │  (Flask - Render)
+      │  Isolation Forest │
       └───────────────────┘
-🔄 Authentication Flow
-User submits login credentials
-Backend validates and compares hashed password (bcrypt)
-JWT tokens are generated:
-Access Token (15 min)
-Refresh Token (7 days)
-Login event is stored in database
-Backend asynchronously sends data to ML service
-ML service evaluates anomaly score
-Suspicious logins are flagged in database
-Session stored → tokens returned
+```
 
-⚡ Important: Anomaly detection is non-blocking to avoid login delays.
+---
 
-🧠 Anomaly Detection (ML Service)
-Model: Isolation Forest (Unsupervised)
-Trained on synthetic login behavior data
-Features used:
-hour_of_day
-ip_changed
-new_device
-login_frequency_today
-Why Isolation Forest?
-No labeled attack data required
-Efficient for anomaly detection
-Works well for behavioral deviations
-🗄️ Database Design
-Tables:
-users
-sessions
-login_events
-Key Design Decisions:
-ON DELETE CASCADE → prevents orphan records
-flagged column → marks anomalous logins
-Session storage → enables refresh token revocation
-🖥️ Admin Dashboard
-📊 Total users, logins, flagged events
-🚨 Highlighted suspicious logins
-🧾 Active session tracking
-🔐 Admin-only access
-⚙️ Tech Stack
-Layer	Technology
-Backend	Node.js, Express
-Database	PostgreSQL
-Auth	JWT, bcrypt
-ML Service	Python, Flask, scikit-learn
-Frontend	React
-Deployment	Render, Vercel
-🚀 Deployment
-Frontend: Vercel
-Backend + Python Service: Render
-Database: Render PostgreSQL
+## 🔄 Authentication Flow
 
-⚠️ Render free tier may sleep after inactivity (30–60s cold start)
+1. User submits login credentials
+2. Backend validates and compares hashed password (bcrypt)
+3. JWT tokens are generated:
+   - **Access Token** — 15 min lifetime
+   - **Refresh Token** — 7 day lifetime
+4. Login event is stored in database
+5. Backend asynchronously sends data to ML service
+6. ML service evaluates anomaly score
+7. Suspicious logins are flagged in database
+8. Session stored → tokens returned
 
-🧪 Testing
+> ⚡ **Note:** Anomaly detection is non-blocking to avoid login delays.
 
-✔️ Authentication flows (valid/invalid credentials)
-✔️ RBAC protection
-✔️ Admin endpoints
-✔️ Anomaly detection scenarios
-✔️ Rapid login attempts
-✔️ Deployment behavior (cold starts, logs)
+---
 
-🧯 Challenges & Fixes
-1. Python version incompatibility
-Issue: Python 3.14 broke dependencies
-Fix: Pinned to python-3.11.9
-2. Service communication
-Issue: http.request complexity
-Fix: Switched to Axios for cleaner integration
-3. Port binding in deployment
-Issue: Flask not exposed
-Fix: Bound to 0.0.0.0 with dynamic PORT
-4. Route mismatch
-Issue: /analyze vs /analyse
-Fix: Standardized endpoint naming
-5. Missing dependencies crash
-Issue: Axios not installed
-Fix: Added to package.json
-🔐 Security Considerations
-Same error message for invalid email/password → prevents user enumeration
-Short-lived access tokens → reduces attack window
-Refresh tokens stored server-side → revocable
-Role-based route protection
-⚠️ Limitations
-Uses synthetic training data
-Global model (not per-user)
-Basic IP/device detection heuristics
-🚧 Future Improvements
-OAuth (Google login)
-Per-user anomaly models
-Redis for behavioral tracking
-Refresh token rotation
-Real-world dataset integration
-💬 Why This Project?
+## 🧠 Anomaly Detection (ML Service)
 
-Modern authentication systems don’t stop at login — they monitor behavior.
+| Property | Detail |
+|---|---|
+| **Model** | Isolation Forest (Unsupervised) |
+| **Training Data** | Synthetic login behavior data |
+| **Features** | `hour_of_day`, `ip_changed`, `new_device`, `login_frequency_today` |
+
+**Why Isolation Forest?**
+- No labeled attack data required
+- Efficient for anomaly detection
+- Works well for behavioral deviations
+
+---
+
+## 🗄️ Database Design
+
+**Tables:** `users` · `sessions` · `login_events`
+
+**Key Design Decisions:**
+- `ON DELETE CASCADE` → prevents orphan records
+- `flagged` column → marks anomalous logins
+- Session storage → enables refresh token revocation
+
+---
+
+## 🖥️ Admin Dashboard
+
+- 📊 Total users, logins, and flagged events
+- 🚨 Highlighted suspicious logins
+- 🧾 Active session tracking
+- 🔐 Admin-only access
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Backend** | Node.js, Express |
+| **Database** | PostgreSQL |
+| **Auth** | JWT, bcrypt |
+| **ML Service** | Python, Flask, scikit-learn |
+| **Frontend** | React |
+| **Deployment** | Render, Vercel |
+
+---
+
+## 🚀 Deployment
+
+| Service | Platform |
+|---|---|
+| Frontend | Vercel |
+| Backend + Python Service | Render |
+| Database | Render PostgreSQL |
+
+> ⚠️ Render free tier may sleep after inactivity (30–60s cold start on first request).
+
+---
+
+## 🧪 Testing
+
+- ✅ Authentication flows (valid/invalid credentials)
+- ✅ RBAC protection
+- ✅ Admin endpoints
+- ✅ Anomaly detection scenarios
+- ✅ Rapid login attempts
+- ✅ Deployment behavior (cold starts, logs)
+
+---
+
+## 🧯 Challenges & Fixes
+
+### 1. Python Version Incompatibility
+- **Issue:** Python 3.14 broke dependencies
+- **Fix:** Pinned to `python-3.11.9`
+
+### 2. Service Communication
+- **Issue:** `http.request` complexity
+- **Fix:** Switched to Axios for cleaner integration
+
+### 3. Port Binding in Deployment
+- **Issue:** Flask not exposed correctly
+- **Fix:** Bound to `0.0.0.0` with dynamic `PORT`
+
+### 4. Route Mismatch
+- **Issue:** `/analyze` vs `/analyse` inconsistency
+- **Fix:** Standardized endpoint naming
+
+### 5. Missing Dependencies Crash
+- **Issue:** Axios not installed
+- **Fix:** Added to `package.json`
+
+---
+
+## 🔐 Security Considerations
+
+- Same error message for invalid email/password → prevents user enumeration
+- Short-lived access tokens → reduces attack window
+- Refresh tokens stored server-side → revocable
+- Role-based route protection
+
+---
+
+## ⚠️ Limitations
+
+- Uses synthetic training data
+- Global model (not per-user)
+- Basic IP/device detection heuristics
+
+---
+
+## 🚧 Future Improvements
+
+- [ ] OAuth (Google login)
+- [ ] Per-user anomaly models
+- [ ] Redis for behavioral tracking
+- [ ] Refresh token rotation
+- [ ] Real-world dataset integration
+
+---
+
+## 💬 Why This Project?
+
+> Modern authentication systems don't stop at login — they monitor behavior.
 
 This project was built to:
+- Understand real-world IAM systems
+- Explore security beyond JWT
+- Implement behavior-based anomaly detection
+- Experience production deployment challenges
 
-Understand real-world IAM systems
-Explore security beyond JWT
-Implement behavior-based anomaly detection
-Experience production deployment challenges
-📌 Author
+---
 
-Proneil Sengupta
-Backend & AI Systems Enthusiast
+## 📌 Author
 
-⭐ Final Note
+**Proneil Sengupta** — Backend & AI Systems Enthusiast
 
-This project focuses on system design, security, and real-world engineering challenges — not just building features.
+---
 
-If you found this interesting, feel free to ⭐ the repo!
+*If you found this interesting, feel free to ⭐ the repo!*
