@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../models/db");
-const http = require("http");
+const axios = require("axios");
 
 // ================= REGISTER =================
 const registerUser = async (req, res) => {
@@ -68,16 +68,13 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // 1. Validation FIRST
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
-  // 2. Normalize
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    // 3. Fetch user
     const result = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [normalizedEmail]
@@ -89,13 +86,35 @@ const loginUser = async (req, res) => {
 
     const user = result.rows[0];
 
-    // 4. Compare password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 5. Generate tokens
+    // ✅ CALL AI SERVICE
+    let isAnomalous = false;
+    let riskScore = 0;
+
+    try {
+      const response = await axios.post(
+        `${process.env.ANOMALY_API_URL}/analyse`,
+        {
+          user_id: user.id,
+          ip_address: req.ip || req.headers["x-forwarded-for"],
+          user_agent: req.headers["user-agent"] || "unknown",
+          hour_of_day: new Date().getHours()
+        }
+      );
+
+      isAnomalous = response.data.flagged;
+      riskScore = response.data.risk_score;
+
+    } catch (err) {
+      console.error("Anomaly service error:", err.message);
+      isAnomalous = false;
+    }
+
+    // ✅ GENERATE TOKENS
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
@@ -108,70 +127,26 @@ const loginUser = async (req, res) => {
       { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d" }
     );
 
-    // 6. Log login event
+    // ✅ STORE LOGIN EVENT WITH FLAG
     await pool.query(
-      `INSERT INTO login_events (user_id, ip_address, user_agent)
-       VALUES ($1, $2, $3)`,
+      `INSERT INTO login_events (user_id, ip_address, user_agent, flagged)
+       VALUES ($1, $2, $3, $4)`,
       [
         user.id,
         req.ip,
-        req.headers["user-agent"] || "unknown"
+        req.headers["user-agent"] || "unknown",
+        isAnomalous
       ]
     );
-// Send login event to anomaly service
-const loginEventData = JSON.stringify({
-  user_id: user.id,
-  ip_address: req.ip,
-  user_agent: req.headers["user-agent"] || "unknown",
-  hour_of_day: new Date().getHours()
-});
 
-const options = {
-  hostname: "localhost",
-  port: 5000,
-  path: "/analyse",
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(loginEventData)
-  }
-};
-
-const anomalyReq = http.request(options, (anomalyRes) => {
-  let responseData = "";
-  anomalyRes.on("data", (chunk) => { responseData += chunk; });
-  anomalyRes.on("end", async () => {
-    try {
-      const result = JSON.parse(responseData);
-      if (result.flagged) {
-        await pool.query(
-  `UPDATE login_events SET flagged = true 
-   WHERE id = (
-     SELECT id FROM login_events 
-     WHERE user_id = $1 
-     ORDER BY timestamp DESC 
-     LIMIT 1
-   )`,
-  [user.id]
-);
-        console.log(`ANOMALY DETECTED for user ${user.email} — risk score: ${result.risk_score}`);
-      }
-    } catch (e) {
-      console.error("Anomaly parse error:", e.message);
+    if (isAnomalous) {
+      console.log(`⚠️ ANOMALY DETECTED for ${user.email} (risk: ${riskScore})`);
     }
-  });
-});
 
-anomalyReq.on("error", (e) => {
-  console.error("Anomaly service unreachable:", e.message);
-});
-
-anomalyReq.write(loginEventData);
-anomalyReq.end();    
-    // 7. Store session
+    // ✅ STORE SESSION
     await pool.query(
       `INSERT INTO sessions (user_id, refresh_token, ip_address, user_agent, expires_at)
-       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '7 days')`,
+      VALUES ($1, $2, $3, $4, NOW() + INTERVAL '7 days')`,
       [
         user.id,
         refreshToken,
