@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureAccess — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --surface: #0f0f1a;
+    --surface2: #161624;
+    --border: #1e1e35;
+    --border2: #2a2a45;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --accent: #4f8ef7;
+    --accent-dim: rgba(79,142,247,0.12);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --yellow: #f59e0b;
+    --yellow-dim: rgba(245,158,11,0.12);
+    --purple: #a855f7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header { text-align: center; margin-bottom: 56px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(79,142,247,0.25);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 500px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .dashboard-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .dashboard-link:hover { border-color: var(--accent); color: var(--accent); }
+  .dashboard-link svg { width: 14px; height: 14px; }
+
+  .creds-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .creds-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .creds-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
+  .creds-divider { width: 1px; height: 32px; background: var(--border); }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .scenario-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .scenario-card.normal::before { background: var(--green); }
+  .scenario-card.suspicious::before { background: var(--red); }
+  .scenario-card.edge::before { background: var(--yellow); }
+
+  .scenario-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .scenario-card:hover::before { opacity: 1; }
+  .scenario-card:active { transform: translateY(0); }
+  .scenario-card.loading { pointer-events: none; opacity: 0.7; }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .normal .card-icon { background: var(--green-dim); }
+  .suspicious .card-icon { background: var(--red-dim); }
+  .edge .card-icon { background: var(--yellow-dim); }
+
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .normal .card-tag { background: var(--green-dim); color: var(--green); }
+  .suspicious .card-tag { background: var(--red-dim); color: var(--red); }
+  .edge .card-tag { background: var(--yellow-dim); color: var(--yellow); }
+
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+
+  .card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; font-weight: 400; }
+
+  .card-params { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+
+  .param { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .param-key { color: var(--muted); }
+  .param-val { color: var(--text); }
+
+  .spin { display: inline-block; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .output-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 40px; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .output-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .result-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: none; }
+  .result-badge.flagged { background: var(--red-dim); color: var(--red); display: inline-block; }
+  .result-badge.normal { background: var(--green-dim); color: var(--green); display: inline-block; }
+  .result-badge.error { background: var(--yellow-dim); color: var(--yellow); display: inline-block; }
+
+  .output-body {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    min-height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+  }
+
+  .output-body.has-content { display: block; align-items: unset; justify-content: unset; }
+
+  .json-key { color: var(--accent); }
+  .json-string { color: var(--green); }
+  .json-number { color: var(--yellow); }
+  .json-bool-true { color: var(--green); }
+  .json-bool-false { color: var(--red); }
+  .json-punct { color: var(--muted); }
+
+  .log { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+
+  .log-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 8px 12px; border-radius: 6px;
+    background: var(--surface2);
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .log-time { color: var(--muted); white-space: nowrap; }
+  .log-icon { flex-shrink: 0; }
+  .log-text { color: var(--text); line-height: 1.4; }
+
+  .how-it-works { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 40px; }
+  .how-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .feature { display: flex; gap: 10px; align-items: flex-start; }
+  .feature-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .feature-text { font-size: 12px; color: var(--muted); line-height: 1.5; font-weight: 400; }
+  .feature-text strong { color: var(--text); display: block; font-size: 12px; margin-bottom: 2px; }
+
+  .notice-box {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--yellow);
+    line-height: 1.6;
+  }
+
+  .footer { text-align: center; color: var(--muted); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  .custom-footer {
+  margin-top: 60px;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.footer-left {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.italic {
+  font-style: italic;
+}
+
+/* 🔥 glitch effect */
+.glitch {
+  position: relative;
+  color: #a855f7;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  opacity: 0.7;
+}
+
+.glitch::before {
+  animation: glitchTop 2s infinite linear alternate-reverse;
+  color: #f87171;
+}
+
+.glitch::after {
+  animation: glitchBottom 2s infinite linear alternate-reverse;
+  color: #60a5fa;
+}
+
+@keyframes glitchTop {
+  0% { clip-path: inset(0 0 80% 0); transform: translate(1px, -1px); }
+  50% { clip-path: inset(0 0 50% 0); transform: translate(-1px, 1px); }
+  100% { clip-path: inset(0 0 80% 0); transform: translate(1px, 0); }
+}
+
+@keyframes glitchBottom {
+  0% { clip-path: inset(80% 0 0 0); transform: translate(-1px, 1px); }
+  50% { clip-path: inset(50% 0 0 0); transform: translate(1px, -1px); }
+  100% { clip-path: inset(80% 0 0 0); transform: translate(0, 1px); }
+}
+
+/* scroll button */
+.scroll-top {
+  padding: 10px 14px;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  text-decoration: none;
+  font-size: 18px;
+  transition: 0.3s;
+  border: 1px solid #a855f7;
+}
+
+.scroll-top:hover {
+  background: rgba(168, 85, 247, 0.4);
+}
+</style>
+</head>
+<body id="top">
+<div class="container">
+
+  <div class="header">
+    <div class="badge">Live Demo · AI Anomaly Detection</div>
+    <h1>Secure<span>Access</span></h1>
+    <p class="subtitle">Click any scenario below to send a real login to the deployed API and watch the ML model flag it in real time.</p>
+    <a class="dashboard-link" href="https://secure-access-ashy.vercel.app" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Open Admin Dashboard →
+    </a>
+  </div>
+
+ <p class="section-label">Admin Access</p>
+<div class="creds-box">
+  <div>
+    <div class="creds-label">Status</div>
+    <div class="creds-value">Demo admin coming soon</div>
+  </div>
+</div>
+
+  <div class="notice-box">
+    ⚡ First request may take 30–60s — Render free tier spins down after inactivity. If you get an error, wait a moment and try again.
+  </div>
+
+  <p class="section-label">Attack Scenarios — Click to Simulate</p>
+  <div class="scenarios" id="scenarios"></div>
+
+  <p class="section-label">API Response</p>
+  <div class="output-panel">
+    <div class="output-header">
+      <span class="output-title" id="output-title">Waiting for scenario...</span>
+      <span class="result-badge" id="result-badge"></span>
+    </div>
+    <div class="output-body" id="output-body">← Click a scenario card above</div>
+  </div>
+
+  <p class="section-label">Activity Log</p>
+  <div class="log" id="log"></div>
+
+  <br><br>
+  <div class="how-it-works">
+    <div class="how-title">🧠 How the AI Model Works</div>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🕐</div>
+        <div class="feature-text"><strong>Hour of Day</strong>Normal logins cluster 8am–10pm. 3am is suspicious.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌍</div>
+        <div class="feature-text"><strong>IP Address</strong>Foreign or unusual IPs trigger the ip_changed flag.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📱</div>
+        <div class="feature-text"><strong>New Device</strong>Unknown user agents mark the login as a new device.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔁</div>
+        <div class="feature-text"><strong>Login Frequency</strong>More than 3–4 logins/day is unusual; 15+ is an attack.</div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+const API = 'https://secure-access-v2ta.onrender.com';
+const ANOMALY = 'https://anomaly-service.onrender.com';
+
+const scenarios = [
+  {
+    type: 'normal',
+    icon: '✅',
+    title: 'Normal Login',
+    desc: 'Typical daytime login from a known IP and browser.',
+    tag: 'SAFE',
+    params: { user_id: 1, ip_address: '127.0.0.1', user_agent: 'Mozilla/5.0 Chrome', hour_of_day: 10 },
+    login: { email: 'normal@secure.com', password: 'secret123' }
+  },
+  {
+    type: 'suspicious',
+    icon: '🚨',
+    title: '3AM Login',
+    desc: 'Login at 3am — far outside normal hours. High risk.',
+    tag: 'FLAGGED',
+    params: { user_id: 1, ip_address: '127.0.0.1', user_agent: 'Mozilla/5.0 Chrome', hour_of_day: 3 },
+    login: { email: 'nightowl@secure.com', password: 'secret123' }
+  },
+  {
+    type: 'suspicious',
+    icon: '🌍',
+    title: 'Foreign IP',
+    desc: 'Login from a Tor exit node / foreign IP (185.220.101.45).',
+    tag: 'FLAGGED',
+    params: { user_id: 1, ip_address: '185.220.101.45', user_agent: 'Mozilla/5.0 Unknown', hour_of_day: 3 },
+    login: { email: 'traveler@secure.com', password: 'secret123' }
+  },
+  {
+    type: 'suspicious',
+    icon: '🤖',
+    title: 'Brute Force Attempt',
+    desc: 'curl user agent — looks like an automated script.',
+    tag: 'FLAGGED',
+    params: { user_id: 1, ip_address: '10.0.0.99', user_agent: 'curl/7.85.0', hour_of_day: 2 },
+    login: { email: 'attacker@secure.com', password: 'secret123' }
+  },
+  {
+    type: 'edge',
+    icon: '⚠️',
+    title: 'New Device',
+    desc: 'Same user, different device and moderate risk hour.',
+    tag: 'BORDERLINE',
+    params: { user_id: 2, ip_address: '192.168.50.1', user_agent: 'PostmanRuntime/7.32.0', hour_of_day: 22 },
+    login: { email: 'newdevice@secure.com', password: 'secret123' }
+  },
+  {
+    type: 'normal',
+    icon: '🔑',
+    title: 'Admin Login',
+    desc: 'Admin account login during business hours — normal.',
+    tag: 'SAFE',
+    params: { user_id: 4, ip_address: '127.0.0.1', user_agent: 'Mozilla/5.0 Chrome', hour_of_day: 14 },
+    login: { email: 'admin@secure.com', password: 'admin123' }
+  },
+];
+
+const grid = document.getElementById('scenarios');
+scenarios.forEach((s, i) => {
+  const card = document.createElement('button');
+  card.className = `scenario-card ${s.type}`;
+  card.id = `card-${i}`;
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-icon">${s.icon}</div>
+      <span class="card-tag">${s.tag}</span>
+    </div>
+    <div class="card-title">${s.title}</div>
+    <div class="card-desc">${s.desc}</div>
+    <div class="card-params">
+      <div class="param"><span class="param-key">ip_address</span><span class="param-val">${s.params.ip_address}</span></div>
+      <div class="param"><span class="param-key">hour_of_day</span><span class="param-val">${s.params.hour_of_day}:00</span></div>
+      <div class="param"><span class="param-key">user_agent</span><span class="param-val">${s.params.user_agent.substring(0,20)}…</span></div>
+    </div>
+  `;
+  card.addEventListener('click', () => runScenario(s, i));
+  grid.appendChild(card);
+});
+
+function now() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false });
+}
+
+function addLog(icon, text) {
+  const log = document.getElementById('log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${now()}</span><span class="log-icon">${icon}</span><span class="log-text">${text}</span>`;
+  log.prepend(entry);
+  while (log.children.length > 10) log.removeChild(log.lastChild);
+}
+
+function syntaxHighlight(json) {
+  return JSON.stringify(json, null, 2)
+    .replace(/("[\w_]+")\s*:/g, '<span class="json-key">$1</span>:')
+    .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
+    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+    .replace(/:\s*(true)/g, ': <span class="json-bool-true">$1</span>')
+    .replace(/:\s*(false)/g, ': <span class="json-bool-false">$1</span>');
+}
+
+async function runScenario(s, idx) {
+  const card = document.getElementById(`card-${idx}`);
+  const titleEl = document.getElementById('output-title');
+  const bodyEl = document.getElementById('output-body');
+  const badgeEl = document.getElementById('result-badge');
+
+  // Loading UI
+  card.classList.add('loading');
+  card.querySelector('.card-title').innerHTML = `<span class="spin">⟳</span> Sending...`;
+  titleEl.textContent = `Running: ${s.title}`;
+  badgeEl.className = 'result-badge';
+  bodyEl.className = 'output-body';
+  bodyEl.innerHTML = '<span class="spin">⟳</span> Sending request...';
+
+  try {
+    const response = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-forwarded-for': s.params?.ip_address || '',
+        'x-test-user-agent': s.params?.user_agent || '',
+        'x-test-hour': s.params?.hour_of_day?.toString() || ''
+      },
+      body: JSON.stringify(s.login)
+    });
+
+    const loginData = await response.json();
+
+
+    if (!response.ok) {
+      throw new Error(loginData.message || 'Login failed');
+    }
+    addLog('🔐', `Login successful — <strong>${s.login.email}</strong>`);
+
+    const reasons = loginData.details || {};
+
+    const combined = {
+      login_result: {
+        message: loginData.message,
+        user: loginData.user
+      },
+      anomaly_analysis: {
+        flagged: loginData.flagged,
+        risk_score: loginData.risk_score,
+        reason: reasons
+      }
+    };
+
+    const reasonHTML = `
+      <div style="margin-top:12px; padding-top:10px; border-top:1px solid #334155;">
+        <strong style="color:#a855f7; font-size:10px;">Detection Reason:</strong><br/>
+        ${reasons.ip_changed ? '🌍 Foreign IP<br/>' : ''}
+        ${reasons.new_device ? '📱 New/Automated Device<br/>' : ''}
+        ${reasons.unusual_hour ? '🕐 Suspicious Hour<br/>' : ''}
+        ${
+          !reasons.ip_changed && !reasons.new_device && !reasons.unusual_hour
+            ? '✓ Behavior Normal'
+            : ''
+        }
+      </div>
+    `;
+
+    bodyEl.className = 'output-body has-content';
+    bodyEl.innerHTML = `
+      <pre>${syntaxHighlight(combined)}</pre>
+      ${reasonHTML}
+    `;
+
+    if (loginData.flagged) {
+      badgeEl.className = 'result-badge flagged';
+      badgeEl.textContent = '⚑ FLAGGED';
+
+      addLog('🚨', `FLAGGED — risk_score: ${loginData.risk_score}`);
+
+  } else {
+      badgeEl.className = 'result-badge normal';
+      badgeEl.textContent = '✓ NORMAL';
+
+      addLog('✅', `Normal login`);
+  }
+
+  } catch (err) {
+    bodyEl.innerHTML = `<pre style="color:red">
+Error: ${err.message}
+
+Try again in a few seconds if the server is waking up.
+</pre>`;
+    badgeEl.className = 'result-badge error';
+    badgeEl.textContent = '⚠ ERROR';
+  }
+
+  // Reset card
+  card.classList.remove('loading');
+  card.querySelector('.card-title').textContent = s.title;
+}
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+<footer class="custom-footer">
+  <div class="footer-left">
+    <p>
+      &copy; <span id="year"></span>
+      <span class="muted">All rights reserved.</span><br />
+      <span class="muted italic">
+        "Let's build what doesn't exist yet." — Proneil Sengupta
+      </span><br />
+      <span class="glitch" data-text="Crafted in the dark by Proneil">
+        Crafted in the dark by <strong>Proneil</strong>
+      </span>
+    </p>
+  </div>
+
+  <a href="#top" class="scroll-top">↑</a>
+</footer>
+</body>
+</html>
