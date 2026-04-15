@@ -1,29 +1,40 @@
 # 🔐 SecureAccess
 
 ### Intelligent Authentication System with AI-Based Anomaly Detection
-
-🚀 **Live Demo:** [secure-access-ashy.vercel.app](https://secure-access-ashy.vercel.app)  
-⚙️ **Backend API:** [secure-access-v2ta.onrender.com](https://secure-access-v2ta.onrender.com)
+🚀 **Interactive Demo (Recommended):** https://secure-access-ui.vercel.app  
+📊 **Admin Dashboard:** https://secure-access-ashy.vercel.app    
+⚙️ **Backend API:** https://secure-access-v2ta.onrender.com
 
 ---
 
 ## 🧠 Overview
 
-SecureAccess is a production-deployed, full-stack authentication system designed to simulate modern identity and access management (IAM) architectures.
+SecureAccess is a production-deployed authentication system that goes beyond JWT-based login by integrating real-time behavioral anomaly detection.
 
-It goes beyond traditional login systems by integrating a machine learning microservice to detect suspicious login behavior in real time.
+Instead of trusting every successful login, the system evaluates user behavior (IP, device, time) using a machine learning microservice and flags suspicious activity instantly.
 
-Built to explore how real-world authentication systems handle security, scalability, and anomaly detection.
+This project simulates how modern identity systems detect compromised accounts — not just authenticate users.
 
 ---
 
-## ⚡ Key Features
+## ⚡ Try it in 30 seconds
+
+1. Open the interactive demo  
+2. Click any scenario (e.g. 3AM login or Foreign IP)  
+3. Watch the system flag anomalies in real time  
+4. Open the admin dashboard to see logged events  
+
+> ⚠️ First request may take ~30-60s (Render free tier cold start)
+
+---
+
+## 🔥 What Makes This Different
 
 - 🔐 JWT Authentication (Access + Refresh Tokens)
 - 🛡️ Role-Based Access Control (RBAC)
 - 📊 Login Event Tracking & Session Management
 - 🧠 AI-Based Anomaly Detection (Isolation Forest)
-- 🔄 Non-blocking backend → ML service communication
+- ⚡ Non-blocking architecture — ML scoring never delays authentication
 - 📈 Admin Dashboard with real-time monitoring
 - ☁️ Fully deployed multi-service architecture
 
@@ -53,7 +64,7 @@ Built to explore how real-world authentication systems handle security, scalabil
       │  Isolation Forest │
       └───────────────────┘
 ```
-
+This architecture ensures authentication remains fast while anomaly detection runs asynchronously — similar to production-grade systems.
 ---
 
 ## 🔄 Authentication Flow
@@ -86,6 +97,7 @@ Built to explore how real-world authentication systems handle security, scalabil
 - Efficient for anomaly detection
 - Works well for behavioral deviations
 
+The model learns normal login behavior patterns and flags deviations without requiring labeled attack data.
 ---
 
 ## 🗄️ Database Design
@@ -197,7 +209,7 @@ Built to explore how real-world authentication systems handle security, scalabil
 
 ## 💬 Why This Project?
 
-> Modern authentication systems don't stop at login — they monitor behavior.
+> Modern authentication systems don’t stop at login — they continuously evaluate user behavior.
 
 This project was built to:
 - Understand real-world IAM systems
