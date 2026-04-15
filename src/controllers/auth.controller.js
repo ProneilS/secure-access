@@ -95,24 +95,36 @@ const loginUser = async (req, res) => {
     let isAnomalous = false;
     let riskScore = 0;
 
-    try {
-      const response = await axios.post(
-        `${process.env.ANOMALY_API_URL}/analyse`,
-        {
-          user_id: user.id,
-          ip_address: req.ip || req.headers["x-forwarded-for"],
-          user_agent: req.headers["user-agent"] || "unknown",
-          hour_of_day: new Date().getHours()
-        }
-      );
+    // 1. Extract metadata (using your new override logic)
+const ip_address = req.headers['x-forwarded-for']?.split(',')[0].trim() 
+                   || req.socket?.remoteAddress 
+                   || req.ip;
 
-      isAnomalous = response.data.flagged;
-      riskScore = response.data.risk_score;
+const user_agent = req.headers['x-test-user-agent'] || req.headers['user-agent'];
 
-    } catch (err) {
-      console.error("Anomaly service error:", err.message);
-      isAnomalous = false;
+const hour_of_day = req.headers['x-test-hour'] !== undefined
+                    ? parseInt(req.headers['x-test-hour'])
+                    : new Date().getHours();
+
+// 2. Call the Anomaly Service using these variables
+try {
+  const response = await axios.post(
+    `${process.env.ANOMALY_API_URL}/analyse`,
+    {
+      user_id: user.id,
+      ip_address: ip_address, // Uses the variable from above
+      user_agent: user_agent, // Uses the variable from above
+      hour_of_day: hour_of_day // Uses the variable from above
     }
+  );
+
+  isAnomalous = response.data.flagged;
+  riskScore = response.data.risk_score;
+
+} catch (err) {
+  console.error("Anomaly service error:", err.message);
+  isAnomalous = false;
+}
 
     // ✅ GENERATE TOKENS
     const accessToken = jwt.sign(
@@ -128,32 +140,28 @@ const loginUser = async (req, res) => {
     );
 
     // ✅ STORE LOGIN EVENT WITH FLAG
-    await pool.query(
-      `INSERT INTO login_events (user_id, ip_address, user_agent, flagged)
-       VALUES ($1, $2, $3, $4)`,
-      [
-        user.id,
-        req.ip,
-        req.headers["user-agent"] || "unknown",
-        isAnomalous
-      ]
-    );
+await pool.query(
+  `INSERT INTO login_events (user_id, ip_address, user_agent, flagged)
+   VALUES ($1, $2, $3, $4)`,
+  [
+    user.id,
+    ip_address, // Changed from req.ip
+    user_agent, // Changed from req.headers["user-agent"]
+    isAnomalous
+  ]
+);
 
-    if (isAnomalous) {
-      console.log(`⚠️ ANOMALY DETECTED for ${user.email} (risk: ${riskScore})`);
-    }
-
-    // ✅ STORE SESSION
-    await pool.query(
-      `INSERT INTO sessions (user_id, refresh_token, ip_address, user_agent, expires_at)
-      VALUES ($1, $2, $3, $4, NOW() + INTERVAL '7 days')`,
-      [
-        user.id,
-        refreshToken,
-        req.ip,
-        req.headers["user-agent"] || "unknown"
-      ]
-    );
+// ✅ STORE SESSION
+await pool.query(
+  `INSERT INTO sessions (user_id, refresh_token, ip_address, user_agent, expires_at)
+  VALUES ($1, $2, $3, $4, NOW() + INTERVAL '7 days')`,
+  [
+    user.id,
+    refreshToken,
+    ip_address, // Changed from req.ip
+    user_agent  // Changed from req.headers["user-agent"]
+  ]
+);
 
     res.status(200).json({
       message: "Login successful",
