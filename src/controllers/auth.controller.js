@@ -164,15 +164,25 @@ await pool.query(
 );
 
     res.status(200).json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role
-      }
-    });
+    message: "Login successful",
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    }, // ✅ COMMA HERE
+
+    flagged: isAnomalous,
+    risk_score: riskScore,
+    details: {
+      ip_changed: ip_address !== '127.0.0.1',
+      new_device: user_agent.includes('curl') || user_agent.includes('Postman'),
+      unusual_hour: hour_of_day < 6 || hour_of_day > 22
+    }
+});
+
+    
 
   } catch (err) {
     console.error("Login error:", err.message);
