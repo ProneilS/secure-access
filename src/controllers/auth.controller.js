@@ -96,15 +96,19 @@ const loginUser = async (req, res) => {
     let riskScore = 0;
 
     // 1. Extract metadata (using your new override logic)
-const ip_address = req.headers['x-forwarded-for']?.split(',')[0].trim() 
-                   || req.socket?.remoteAddress 
-                   || req.ip;
+const isDemo = req.headers['x-demo-secret'] === process.env.DEMO_SECRET;
 
-const user_agent = req.headers['x-test-user-agent'] || req.headers['user-agent'];
+const ip_address = isDemo
+  ? (req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip)
+  : (req.socket?.remoteAddress || req.ip);
 
-const hour_of_day = req.headers['x-test-hour'] !== undefined
-                    ? parseInt(req.headers['x-test-hour'])
-                    : new Date().getHours();
+const user_agent = isDemo
+  ? (req.headers['x-test-user-agent'] || req.headers['user-agent'])
+  : req.headers['user-agent'];
+
+const hour_of_day = isDemo && req.headers['x-test-hour'] !== undefined
+  ? parseInt(req.headers['x-test-hour'])
+  : new Date().getHours();
 
 // 2. Call the Anomaly Service using these variables
 try {

@@ -580,7 +580,8 @@ async function runScenario(s, idx) {
         'Content-Type': 'application/json',
         'x-forwarded-for': s.params?.ip_address || '',
         'x-test-user-agent': s.params?.user_agent || '',
-        'x-test-hour': s.params?.hour_of_day?.toString() || ''
+        'x-test-hour': s.params?.hour_of_day?.toString() || '',
+        'x-demo-secret': '466aace8cbcaecab1269088f5ae5d5d59988bdb567b3ae17901e254c4c119081'
       },
       body: JSON.stringify(s.login)
     });
